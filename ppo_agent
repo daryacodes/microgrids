@@ -1,0 +1,37 @@
+# 🤖 PPO agent
+
+import torch
+import torch.nn as nn
+from torch.distributions import Normal
+
+class PolicyNetwork(nn.Module):
+    def __init__(self, obs_dim, action_dim):
+        super(PolicyNetwork, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(obs_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+        )
+        self.mean_head = nn.Linear(64, action_dim)
+        self.log_std = nn.Parameter(torch.zeros(action_dim))
+
+    def forward(self, x):
+        x = self.fc(x)
+        mean = self.mean_head(x)
+        std = self.log_std.exp().expand_as(mean)
+        return Normal(mean, std)
+
+class ValueNetwork(nn.Module):
+    def __init__(self, obs_dim):
+        super(ValueNetwork, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(obs_dim, 64),
+            nn.ReLU(),
+            nn.Linear(64, 64),
+            nn.ReLU(),
+            nn.Linear(64, 1),
+        )
+
+    def forward(self, x):
+        return self.fc(x)
